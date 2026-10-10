@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Loan Approval Prediction</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="page-container">
+
+        <!-- Website introduction -->
+        <section class="intro">
+
+            <span class="eyebrow">SMART FINANCE · ML PROJECT</span>
+
+            <h1>
+                Loan Approval
+                <br>
+                <span>Prediction</span>
+            </h1>
+
+            <p>
+                Explore a machine learning model that predicts
+                loan application outcomes using applicant information.
+            </p>
+
+            <div class="mini-stats">
+
+                <div>
+                    <strong>ML</strong>
+                    <small>Logistic Regression</small>
+                </div>
+
+                <div>
+                    <strong>80 / 20</strong>
+                    <small>Train / Test Split</small>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Application form -->
+        <section class="form-card">
+
+            <div class="card-heading">
+
+                <div>
+                    <span class="eyebrow">APPLICATION DETAILS</span>
+                    <h2>Applicant Information</h2>
+                </div>
+
+                <div class="card-icon">₹</div>
+
+            </div>
+
+            <form method="POST" action="/">
+
+                <div class="form-grid">
+
+                    <!-- Applicant income -->
+                    <div class="form-group">
+
+                        <label for="applicant_income">
+                            Monthly Applicant Income (₹)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="applicant_income"
+                            name="applicant_income"
+                            placeholder="e.g. 45000"
+                            min="1"
+                            step="any"
+                            required
+                            value="{{ request.form.get('applicant_income', '') }}"
+                        >
+
+                    </div>
+
+                    <!-- Co-applicant income -->
+                    <div class="form-group">
+
+                        <label for="coapplicant_income">
+                            Monthly Co-applicant Income (₹)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="coapplicant_income"
+                            name="coapplicant_income"
+                            placeholder="e.g. 20000"
+                            min="0"
+                            step="any"
+                            required
+                            value="{{ request.form.get('coapplicant_income', '') }}"
+                        >
+
+                    </div>
+
+                    <!-- Loan amount -->
+                    <div class="form-group">
+
+                        <label for="loan_amount">
+                            Total Loan Amount (₹)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="loan_amount"
+                            name="loan_amount"
+                            placeholder="e.g. 1500000"
+                            min="1"
+                            step="any"
+                            required
+                            value="{{ request.form.get('loan_amount', '') }}"
+                        >
+
+                    </div>
+
+                    <!-- Loan term -->
+                    <div class="form-group">
+
+                        <label for="loan_term">Loan Term</label>
+
+                            <select id="loan_term" name="loan_term" required>
+                                <option value="">Select duration</option>
+
+                                    {% for term in [12, 24, 36, 48, 60] %}
+                                    <option value="{{ term }}"
+                                        {% if request.form.get('loan_term', '')|int == term %}
+                                            selected
+                                        {% endif %}>
+                                     {{ term // 12 }} year(s)
+                                    </option>
+                                    {% endfor %}
+                            </select>
+                    </div>
+
+                    <!-- Credit history -->
+                    <div class="form-group">
+
+                        <label for="credit_history">
+                            Credit History
+                        </label>
+
+                        <select
+                            id="credit_history"
+                            name="credit_history"
+                            required
+                        >
+
+                            <option value="">Select credit history</option>
+
+                            <option
+                                value="1"
+                                {% if request.form.get('credit_history') == '1' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Good / Available
+                            </option>
+
+                            <option
+                                value="0"
+                                {% if request.form.get('credit_history') == '0' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Poor / Unavailable
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Employment -->
+                    <div class="form-group">
+
+                        <label for="self_employed">
+                            Employment Type
+                        </label>
+
+                        <select
+                            id="self_employed"
+                            name="self_employed"
+                            required
+                        >
+
+                            <option value="">Select employment</option>
+
+                            <option
+                                value="0"
+                                {% if request.form.get('self_employed') == '0' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Salaried / Not Self-employed
+                            </option>
+
+                            <option
+                                value="1"
+                                {% if request.form.get('self_employed') == '1' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Self-employed
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <!-- Submit button -->
+                <button type="submit" class="predict-btn">
+
+                    Predict Loan Outcome
+
+                    <span>↗</span>
+
+                </button>
+
+                <p class="privacy-note">
+                    Educational demo · No database or personal-data storage
+                </p>
+
+            </form>
+
+            <!-- Prediction result -->
+            {% if prediction %}
+
+                <div class="result
+                    {% if prediction == 'Likely Approved' %}
+                        approved
+                    {% else %}
+                        rejected
+                    {% endif %}">
+
+                    <span class="result-label">
+                        MODEL PREDICTION
+                    </span>
+
+                    <h3>{{ prediction }}</h3>
+
+                    {% if prediction == 'Likely Rejected' %}
+
+                        <div class="rejection-details">
+
+                            <h4>Possible Reasons for Rejection</h4>
+
+                            <ul>
+                                {% for reason in rejection_reasons %}
+                                    <li>{{ reason }}</li>
+                                {% endfor %}
+                            </ul>
+
+                        </div>
+
+                    {% else %}
+
+                        <p>
+                            The model classified this application
+                            as likely approved based on the supplied
+                            information.
+                        </p>
+
+                    {% endif %}
+
+                    <p class="disclaimer">
+                        This is an educational prediction, not an actual
+                        bank decision. Listed reasons are illustrative
+                        checks and may not explain the model's exact result.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+            <!-- Input error -->
+            {% if error %}
+
+                <div class="result rejected">
+
+                    <h3>Input Error</h3>
+
+                    <p>{{ error }}</p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+        <!-- Footer -->
+        <footer>
+
+            <p>
+                Educational Machine Learning Project
+            </p>
+
+            <p>
+                Test accuracy on synthetic data: {{ accuracy }}%
+            </p>
+
+            <p>
+                Synthetic data does not represent actual bank decisions.
+            </p>
+
+        </footer>
+
+    </main>
+
+</body>
+
+</html>
